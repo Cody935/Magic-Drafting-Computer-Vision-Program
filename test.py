@@ -1,20 +1,36 @@
-# test.py - Debug YOLO
-from ultralytics import YOLO
+# lighting_test.py
 import cv2
+import time
 
-model = YOLO("mtg_card_detector.pt")
+cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
-img = cv2.imread("images/ayara.jpg")  # ← Change to any image
-results = model(img, conf=0.1, verbose=True)
+print("Lighting Test - Show a card and check if text is readable")
+print("Press 's' to save current frame, 'q' to quit")
 
-for r in results:
-    for box in r.boxes:
-        x1, y1, x2, y2 = map(int, box.xyxy[0])
-        cls = int(box.cls)
-        conf = box.conf.item()
-        print(f"Detected: class={cls}, conf={conf:.2f}, box=({x1},{y1},{x2},{y2})")
-        cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+    
+    frame = cv2.flip(frame, 1)
+    
+    # Add text guidance
+    cv2.putText(frame, "Can you read the card name clearly?", (10, 30),
+               cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+    cv2.putText(frame, "Press 's' to save, 'q' to quit", (10, 70),
+               cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+    
+    cv2.imshow("Lighting Test", frame)
+    
+    key = cv2.waitKey(1) & 0xFF
+    if key == ord('q'):
+        break
+    elif key == ord('s'):
+        filename = f"camera_test_{int(time.time())}.jpg"
+        cv2.imwrite(filename, frame)
+        print(f"Saved: {filename}")
 
-cv2.imshow("Test", img)
-cv2.waitKey(0)
+cap.release()
 cv2.destroyAllWindows()
